@@ -1,6 +1,7 @@
 package fr.ft_lyon.tgriffit.noteapp
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color.rgb
 import android.os.Bundle
 import android.util.Log
@@ -44,9 +45,16 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
         notesAvailable = findViewById(R.id.notes_available)
         updateNbNotes()
 
-
         addNewNoteButton.setOnClickListener{
-           notes.add(NoteModel("Note ${notes.size + 1}", "Description of Note ${notes.size + 1}"))
+           val intent = Intent(this, CreateNoteActivity::class.java)
+            var noteTitle: String = ""
+            var noteDesc: String = ""
+            intent.putExtra("noteTitle", noteTitle)
+            intent.putExtra("noteDesc", noteDesc)
+            startActivity(intent)
+
+
+            notes.add(NoteModel("Note ${notes.size + 1}", "Description of Note ${notes.size + 1}"))
             updateNoteList()
 
         }

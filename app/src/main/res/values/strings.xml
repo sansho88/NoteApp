@@ -5,4 +5,5 @@
     <string name="delete_a_note">Delete a note</string>
     <string name="note_title">Note title</string>
     <string name="note_description">Note description</string>
+    <string name="confirm_note">Confirm note</string>
 </resources>
