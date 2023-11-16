@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">NoteApp</string>
+    <string name="add_icon">Add icon</string>
+    <string name="no_note_available">NO NOTE AVAILABLE</string>
+    <string name="delete_a_note">Delete a note</string>
+    <string name="note_title">Note title</string>
+    <string name="note_description">Note description</string>
+</resources>
