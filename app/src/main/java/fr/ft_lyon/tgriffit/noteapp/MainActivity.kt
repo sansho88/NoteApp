@@ -8,6 +8,8 @@ import android.util.Log
 import android.widget.TextView
 
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
@@ -24,14 +26,27 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.ft_lyon.tgriffit.noteapp.model.NoteModel
 import fr.ft_lyon.tgriffit.noteapp.ui.theme.NoteAppTheme
 
+
 class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
     lateinit var addNewNoteButton : FloatingActionButton;
     lateinit var notesAvailable : TextView
-    var notes = mutableListOf<NoteModel>(
-        NoteModel("My first Note", "J'aime beaucoup en vrai!"),
-        NoteModel("My 2nd Note", "C'est toujours aussi cool!")
-    )
+
+    private var activityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK){
+                val data = result.data
+                val noteTitle: String = data?.getStringExtra(NOTE_TITLE) ?: ""
+                val noteDesc: String = data?.getStringExtra(NOTE_DESC) ?: ""
+
+                val newNote = NoteModel(noteTitle, noteDesc)
+                notes.add(0, newNote)
+                noteRecyclerView.adapter?.notifyItemChanged(0)
+                updateNbNotes()
+            }
+    }
+
+    var notes = mutableListOf<NoteModel>()
 
 
     lateinit var noteRecyclerView: RecyclerView
@@ -47,16 +62,7 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
         addNewNoteButton.setOnClickListener{
            val intent = Intent(this, CreateNoteActivity::class.java)
-            var noteTitle: String = ""
-            var noteDesc: String = ""
-            intent.putExtra("noteTitle", noteTitle)
-            intent.putExtra("noteDesc", noteDesc)
-            startActivity(intent)
-
-
-            notes.add(NoteModel("Note ${notes.size + 1}", "Description of Note ${notes.size + 1}"))
-            updateNoteList()
-
+            activityResult.launch(intent)
         }
 
     }
@@ -79,23 +85,6 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
     override fun onItemClicked(position: Int) {
         Log.d("MainActivity", "onItemClicked: ${notes[position]}")
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-            text = "Bonjour $name!",
-            modifier = modifier
-    )
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    NoteAppTheme {
-        Greeting("Sanshoid")
     }
 }
 
