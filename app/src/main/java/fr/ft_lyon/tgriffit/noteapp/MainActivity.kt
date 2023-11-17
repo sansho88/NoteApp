@@ -10,8 +10,10 @@ import android.widget.TextView
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -83,8 +85,17 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
         noteRecyclerView.layoutManager = layoutManager
     }
 
+    private fun showDeleteNoteAlertDialog(note: NoteModel){
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Delete note ?")
+    }
     override fun onItemClicked(position: Int) {
         Log.d("MainActivity", "onItemClicked: ${notes[position]}")
+    }
+
+    override fun onDeleteNoteClicked(position: Int) {
+        notes.removeAt(position)
+        noteRecyclerView.adapter?.notifyItemRemoved(position)
     }
 }
 

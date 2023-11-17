@@ -12,6 +12,7 @@ class NoteAdapter(var notes: List<NoteModel>, var listener: NoteListener): Recyc
 
     interface NoteListener{
         fun onItemClicked(position: Int)
+        fun onDeleteNoteClicked(position: Int)
     }
 
     class NoteViewHolder(view: View): RecyclerView.ViewHolder(view){
@@ -36,6 +37,9 @@ class NoteAdapter(var notes: List<NoteModel>, var listener: NoteListener): Recyc
         val note = notes[position]
         holder.noteTitletxtV.text = note.title
         holder.noteDesctxtV.text = note.desc
+        holder.deleteNoteImgBtn.setOnClickListener{
+            listener.onDeleteNoteClicked(position)
+        }
         holder.itemView.setOnClickListener {
             listener.onItemClicked(position)
         }
