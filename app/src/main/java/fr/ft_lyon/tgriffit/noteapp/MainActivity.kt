@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color.rgb
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.TextView
 
 import androidx.activity.compose.setContent
@@ -22,45 +23,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.ft_lyon.tgriffit.noteapp.model.NoteModel
 import fr.ft_lyon.tgriffit.noteapp.ui.theme.NoteAppTheme
+import fr.ft_lyon.tgriffit.noteapp.viewmodel.NotesListViewModel
 
 
 class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
-    lateinit var addNewNoteButton : FloatingActionButton;
-    lateinit var notesAvailable : TextView
+    private lateinit var    addNewNoteButton : FloatingActionButton;
+    private lateinit var    notesAvailable : TextView
+    private lateinit var    notesListViewModel: NotesListViewModel
+    private lateinit var    noteRecyclerView: RecyclerView
+    private var             notes = mutableListOf<NoteModel>()
 
-    private var activityResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK){
-                val data = result.data
-                val noteTitle: String = data?.getStringExtra(NOTE_TITLE) ?: ""
-                val noteDesc: String = data?.getStringExtra(NOTE_DESC) ?: ""
+    private var activityResult = registerForActivityResult(ActivityResultContracts
+        .StartActivityForResult()) {
+            result: ActivityResult ->
+                if (result.resultCode == Activity.RESULT_OK){
+                    val data = result.data
+                    val noteTitle: String = data?.getStringExtra(NOTE_TITLE) ?: ""
+                    val noteDesc: String = data?.getStringExtra(NOTE_DESC) ?: ""
 
-                val newNote = NoteModel(noteTitle, noteDesc)
-                notes.add(0, newNote)
-                noteRecyclerView.adapter?.notifyItemChanged(0)
-                updateNbNotes()
-            }
+                    val newNote = NoteModel(noteTitle, noteDesc)
+                    notesListViewModel.addItem(0, newNote)
+                    noteRecyclerView.adapter?.notifyItemChanged(0)
+                    //updateNbNotes()
+                }
     }
 
-    var notes = mutableListOf<NoteModel>()
 
-
-    lateinit var noteRecyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initNoteRecyclerView()
+
         addNewNoteButton = findViewById(R.id.createNoteButton)
         notesAvailable = findViewById(R.id.notes_available)
-        updateNbNotes()
+        notesListViewModel = ViewModelProvider(this).get(NotesListViewModel::class.java)
+        if (this::notesListViewModel.isInitialized) {
+            initNoteRecyclerView()
+            notesListViewModel.noteList.observe(this) { _ -> updateNbNotes() }
+        }
+        updateNbNotes() //init text
 
         addNewNoteButton.setOnClickListener{
            val intent = Intent(this, CreateNoteActivity::class.java)
@@ -69,33 +79,63 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
     }
 
-    private fun updateNbNotes() = notesAvailable.setText("${notes.size} note${putS(notes.size)} available")
-
-    private fun updateNoteList(){
-        noteRecyclerView.adapter = NoteAdapter(notes, this)
-        updateNbNotes()
-    }
-
+    private fun updateNbNotes() = notesAvailable.setText("${notesListViewModel.size} note${putS(notesListViewModel.size ?: 0)} available")
     private fun initNoteRecyclerView() {
         noteRecyclerView = findViewById(R.id.note_recyclerView)
-        val adapter: NoteAdapter = NoteAdapter(notes, this)
+        val adapter: NoteAdapter = NoteAdapter( notesListViewModel.noteList.value?.toList()!!, this)
         val layoutManager = LinearLayoutManager(this)
 
         noteRecyclerView.adapter = adapter
         noteRecyclerView.layoutManager = layoutManager
     }
 
-    private fun showDeleteNoteAlertDialog(note: NoteModel){
+    private fun showDeleteNoteAlertDialog(note: NoteModel, position: Int){
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Delete note ?")
+        builder.setTitle("Delete ${note.title} ?")
+            .setMessage("Are you sure to delete this ?")
+            .setIcon(android.R.drawable.ic_menu_delete)
+            .setPositiveButton("Delete"){ dialog, _ ->
+                dialog.dismiss()
+                deleteNote(position)
+            }
+            .setNegativeButton("Cancel"){dialog, _ ->
+                dialog.dismiss()
+            }
+        val alertDialog = builder.create()
+        alertDialog.show()
     }
     override fun onItemClicked(position: Int) {
         Log.d("MainActivity", "onItemClicked: ${notes[position]}")
     }
 
     override fun onDeleteNoteClicked(position: Int) {
-        notes.removeAt(position)
+       showDeleteNoteAlertDialog(notesListViewModel[position]!!, position)
+    }
+
+   /* override fun onContentChanged() {
+        super.onContentChanged()
+        if(this::notesAvailable.isInitialized)
+            updateNbNotes()
+    }*/
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && this::notesAvailable.isInitialized)
+            updateNbNotes()
+    }
+
+    override fun getCurrentFocus(): View? {
+        return super.getCurrentFocus()
+    }
+
+    override fun hasWindowFocus(): Boolean {
+        return super.hasWindowFocus()
+    }
+
+    private fun deleteNote(position: Int){
+        notesListViewModel.removeItem(position)
         noteRecyclerView.adapter?.notifyItemRemoved(position)
+        //updateNbNotes()
     }
 }
 
