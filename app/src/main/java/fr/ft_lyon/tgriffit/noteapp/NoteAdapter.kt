@@ -10,7 +10,12 @@ import fr.ft_lyon.tgriffit.noteapp.model.NoteModel
 
 class NoteAdapter(var notes: List<NoteModel>, var listener: NoteListener): RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
+    
+
     interface NoteListener{
+        val TAG: String
+            get() = "MAIN"
+
         fun onItemClicked(position: Int)
         fun onDeleteNoteClicked(position: Int)
     }

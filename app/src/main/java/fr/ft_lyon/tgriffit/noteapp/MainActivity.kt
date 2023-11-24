@@ -2,28 +2,14 @@ package fr.ft_lyon.tgriffit.noteapp
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color.rgb
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.TextView
-
-import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -39,7 +25,6 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
     private lateinit var    notesAvailable : TextView
     private lateinit var    notesListViewModel: NotesListViewModel
     private lateinit var    noteRecyclerView: RecyclerView
-    private var             notes = mutableListOf<NoteModel>()
 
     private var activityResult = registerForActivityResult(ActivityResultContracts
         .StartActivityForResult()) {
@@ -51,7 +36,8 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
                     val newNote = NoteModel(noteTitle, noteDesc)
                     notesListViewModel.addItem(0, newNote)
-                    noteRecyclerView.adapter?.notifyItemChanged(0)
+                    noteRecyclerView.adapter?.notifyItemInserted(0)
+                    Log.d(TAG, "ActivityResult: ${newNote.title} created. NoteList size = ${notesListViewModel.size()})")
                     //updateNbNotes()
                 }
     }
@@ -62,15 +48,14 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
         addNewNoteButton = findViewById(R.id.createNoteButton)
         notesAvailable = findViewById(R.id.notes_available)
-        notesListViewModel = ViewModelProvider(this).get(NotesListViewModel::class.java)
+        updateNbNotes() //init text
+        notesListViewModel = ViewModelProvider(this)[NotesListViewModel::class.java]
+
         if (this::notesListViewModel.isInitialized) {
             initNoteRecyclerView()
-            notesListViewModel.noteList.observe(this) { _ -> updateNbNotes() }
         }
-        updateNbNotes() //init text
 
         addNewNoteButton.setOnClickListener{
            val intent = Intent(this, CreateNoteActivity::class.java)
@@ -79,14 +64,17 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
     }
 
-    private fun updateNbNotes() = notesAvailable.setText("${notesListViewModel.size} note${putS(notesListViewModel.size ?: 0)} available")
+    private fun updateNbNotes() = notesAvailable.setText("${notesListViewModel.size()} note${putS(notesListViewModel.size() ?: 0)} available")
     private fun initNoteRecyclerView() {
         noteRecyclerView = findViewById(R.id.note_recyclerView)
-        val adapter: NoteAdapter = NoteAdapter( notesListViewModel.noteList.value?.toList()!!, this)
         val layoutManager = LinearLayoutManager(this)
-
-        noteRecyclerView.adapter = adapter
         noteRecyclerView.layoutManager = layoutManager
+
+        notesListViewModel.noteList.observe(this){ newList ->
+            val adapter: NoteAdapter = NoteAdapter(newList, this)
+            noteRecyclerView.adapter = adapter
+            updateNbNotes()
+        }
     }
 
     private fun showDeleteNoteAlertDialog(note: NoteModel, position: Int){
@@ -105,37 +93,16 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
         alertDialog.show()
     }
     override fun onItemClicked(position: Int) {
-        Log.d("MainActivity", "onItemClicked: ${notes[position]}")
+        Log.d("MainActivity", "onItemClicked: ${notesListViewModel[position]}")
     }
 
     override fun onDeleteNoteClicked(position: Int) {
        showDeleteNoteAlertDialog(notesListViewModel[position]!!, position)
     }
 
-   /* override fun onContentChanged() {
-        super.onContentChanged()
-        if(this::notesAvailable.isInitialized)
-            updateNbNotes()
-    }*/
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && this::notesAvailable.isInitialized)
-            updateNbNotes()
-    }
-
-    override fun getCurrentFocus(): View? {
-        return super.getCurrentFocus()
-    }
-
-    override fun hasWindowFocus(): Boolean {
-        return super.hasWindowFocus()
-    }
-
     private fun deleteNote(position: Int){
         notesListViewModel.removeItem(position)
         noteRecyclerView.adapter?.notifyItemRemoved(position)
-        //updateNbNotes()
     }
 }
 

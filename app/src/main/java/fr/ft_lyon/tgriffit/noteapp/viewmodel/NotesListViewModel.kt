@@ -7,9 +7,9 @@ import fr.ft_lyon.tgriffit.noteapp.model.NoteModel
 import java.text.FieldPosition
 
 class NotesListViewModel: ViewModel() {
-    private val internalList = MutableLiveData<ArrayList<NoteModel>>()
+    private var internalList = MutableLiveData<ArrayList<NoteModel>>()
     val noteList: LiveData<ArrayList<NoteModel>> get() = internalList
-    var size = noteList.value?.size ?: 0
+    fun size() = noteList.value?.size ?: 0
     operator fun get(index: Int): NoteModel?{
         return internalList.value?.getOrNull(index)
     }
