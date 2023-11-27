@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -17,6 +18,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.ft_lyon.tgriffit.noteapp.model.NoteModel
 import fr.ft_lyon.tgriffit.noteapp.ui.theme.NoteAppTheme
 import fr.ft_lyon.tgriffit.noteapp.viewmodel.NotesListViewModel
+import java.lang.reflect.Method
+import java.util.jar.Attributes.Name
 
 
 class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
     private lateinit var    notesAvailable : TextView
     private lateinit var    notesListViewModel: NotesListViewModel
     private lateinit var    noteRecyclerView: RecyclerView
+    private lateinit var    selectedNote : NoteModel
 
     private var activityResult = registerForActivityResult(ActivityResultContracts
         .StartActivityForResult()) {
@@ -37,9 +41,27 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
                     val newNote = NoteModel(noteTitle, noteDesc)
                     notesListViewModel.addItem(0, newNote)
                     noteRecyclerView.adapter?.notifyItemInserted(0)
-                    Log.d(TAG, "ActivityResult: ${newNote.title} created. NoteList size = ${notesListViewModel.size()})")
-                    //updateNbNotes()
+                    Log.d(TAG, "ActivityResult: ${newNote.getTitle()} created. NoteList size = ${notesListViewModel.size()})")
                 }
+    }
+
+    private var activityResultUpdateNote = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+        result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK){
+                val data = result.data
+                val noteTitle = data?.getStringExtra(NOTE_TITLE) ?: ""
+                val noteDesc = data?.getStringExtra(NOTE_DESC) ?: ""
+                val position = data?.getIntExtra(NOTE_POSITION, -1)!!
+
+                Log.d(TAG, "${Thread.currentThread().stackTrace[1]}: title: $noteTitle, desc: $noteDesc, position: $position")
+                if (position >= 0)
+                {
+                    notesListViewModel[position]?.update(noteTitle, noteDesc)
+                    noteRecyclerView.adapter?.notifyItemChanged(position)
+                    Toast.makeText(this, getString(R.string.note_updated), Toast.LENGTH_SHORT).show()
+                }
+
+            }
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,7 +101,7 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
     private fun showDeleteNoteAlertDialog(note: NoteModel, position: Int){
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Delete ${note.title} ?")
+        builder.setTitle("Delete ${note.getTitle()} ?")
             .setMessage("Are you sure to delete this ?")
             .setIcon(android.R.drawable.ic_menu_delete)
             .setPositiveButton("Delete"){ dialog, _ ->
@@ -94,6 +116,12 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
     }
     override fun onItemClicked(position: Int) {
         Log.d("MainActivity", "onItemClicked: ${notesListViewModel[position]}")
+        selectedNote = notesListViewModel[position]!!
+        val intent = Intent(this, NoteDetailsActivity::class.java)
+        intent.putExtra(NOTE_TITLE, selectedNote.getTitle())
+        intent.putExtra(NOTE_DESC, selectedNote.getDesc())
+        intent.putExtra(NOTE_POSITION, position)
+        activityResultUpdateNote.launch(intent)
     }
 
     override fun onDeleteNoteClicked(position: Int) {

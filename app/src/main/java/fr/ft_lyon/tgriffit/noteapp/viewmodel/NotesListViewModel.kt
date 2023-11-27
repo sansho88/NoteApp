@@ -38,4 +38,10 @@ class NotesListViewModel: ViewModel() {
         internalList.value = list
     }
 
+    operator fun set(position: Int, value: NoteModel) {
+        val list = internalList.value ?: ArrayList()
+        list[position] = value
+        internalList.value = list
+    }
+
 }

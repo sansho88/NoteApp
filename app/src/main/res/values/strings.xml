@@ -6,4 +6,6 @@
     <string name="note_title">Note title</string>
     <string name="note_description">Note description</string>
     <string name="confirm_note">Confirm note</string>
+    <string name="updateNote">Update</string>
+    <string name="note_updated">Note updated</string>
 </resources>

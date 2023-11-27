@@ -13,6 +13,9 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         tools:targetApi="34">
         <activity
+            android:name=".NoteDetailsActivity"
+            android:exported="false" />
+        <activity
             android:name=".CreateNoteActivity"
             android:exported="false" />
         <activity

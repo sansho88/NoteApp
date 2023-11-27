@@ -40,8 +40,8 @@ class NoteAdapter(var notes: List<NoteModel>, var listener: NoteListener): Recyc
 
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         val note = notes[position]
-        holder.noteTitletxtV.text = note.title
-        holder.noteDesctxtV.text = note.desc
+        holder.noteTitletxtV.text = note.getTitle()
+        holder.noteDesctxtV.text = note.getDesc()
         holder.deleteNoteImgBtn.setOnClickListener{
             listener.onDeleteNoteClicked(position)
         }
