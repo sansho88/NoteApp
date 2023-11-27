@@ -21,7 +21,7 @@ import fr.ft_lyon.tgriffit.noteapp.viewmodel.NotesListViewModel
 
 class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
-    private lateinit var    addNewNoteButton : FloatingActionButton;
+    private lateinit var    addNewNoteButton : FloatingActionButton
     private lateinit var    notesAvailable : TextView
     private lateinit var    notesListViewModel: NotesListViewModel
     private lateinit var    noteRecyclerView: RecyclerView
@@ -41,17 +41,15 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
                     //updateNbNotes()
                 }
     }
-
-
-
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         addNewNoteButton = findViewById(R.id.createNoteButton)
         notesAvailable = findViewById(R.id.notes_available)
-        updateNbNotes() //init text
         notesListViewModel = ViewModelProvider(this)[NotesListViewModel::class.java]
+        updateNbNotes() //init text
 
         if (this::notesListViewModel.isInitialized) {
             initNoteRecyclerView()
@@ -64,14 +62,16 @@ class MainActivity : AppCompatActivity(), NoteAdapter.NoteListener {
 
     }
 
-    private fun updateNbNotes() = notesAvailable.setText("${notesListViewModel.size()} note${putS(notesListViewModel.size() ?: 0)} available")
+    private fun updateNbNotes() {
+        notesAvailable.text = "${notesListViewModel.size()} note${putS(notesListViewModel.size())} available"
+    }
     private fun initNoteRecyclerView() {
         noteRecyclerView = findViewById(R.id.note_recyclerView)
         val layoutManager = LinearLayoutManager(this)
         noteRecyclerView.layoutManager = layoutManager
 
         notesListViewModel.noteList.observe(this){ newList ->
-            val adapter: NoteAdapter = NoteAdapter(newList, this)
+            val adapter = NoteAdapter(newList, this)
             noteRecyclerView.adapter = adapter
             updateNbNotes()
         }
